@@ -30,7 +30,7 @@ architecture beh of ulx3s is
         constant vlayout_id: integer := 6;
         -- GUI pointing device type (enable max 1)
         constant C_mouse_ps2    : boolean := false;  -- PS/2 or USB+PS/2 mouse
-        constant C_mouse_usb    : boolean := false; -- USB  or USB+PS/2 mouse
+        constant C_mouse_usb    : boolean := true; -- USB  or USB+PS/2 mouse
         constant C_mouse_usb_speed: std_logic := '0'; -- '0':Low Speed, '1':Full Speed
         constant C_mouse_host   : boolean := false; -- serial port for host mouse instead of standard RGTR control
         -- serial port type (enable max 1)
@@ -602,8 +602,8 @@ begin
 	    -- to FPGA pin shared with ADC channel which should
 	    -- read something from 12'h000 to 12'hFFF with some
 	    -- conversion noise
-            gn(14) <= S_generator_n when btn(3) = '1' else 'Z';
-            gp(14) <= S_generator_p when btn(3) = '1' else 'Z';
+            gn(14) <= S_generator_n when btn(3) = 'Z' else '1';
+            gp(14) <= S_generator_p when btn(3) = 'Z' else '1';
             gn(15) <= S_generator_n when btn(4) = '1' else 'Z';
             gp(15) <= S_generator_p when btn(4) = '1' else 'Z';
             gn(16) <= S_generator_p when btn(5) = '1' else 'Z';
@@ -1500,17 +1500,20 @@ begin
     vga: entity work.vga
     generic map
     (
+
+--480,  504,  552,  624,  272,  273,  276,  295
+
       -- 800x600 40 MHz pixel clock, works
---      C_resolution_x => 800,
---      C_hsync_front_porch => 40,
---      C_hsync_pulse => 128,
---      C_hsync_back_porch => 88,
---      C_resolution_y => 600,
---      C_vsync_front_porch => 1,
---      C_vsync_pulse => 4,
---      C_vsync_back_porch => 23,
---      C_bits_x => 12,
---      C_bits_y => 11    
+      C_resolution_x => 480,
+      C_hsync_front_porch => 624 - 552,
+      C_hsync_pulse => 64,
+      C_hsync_back_porch => 552 - 504,
+      C_resolution_y => 272,
+      C_vsync_front_porch => 295 - 276,
+      C_vsync_pulse => 4,
+      C_vsync_back_porch => 276 - 273,
+      C_bits_x => 10,
+      C_bits_y => 10    
 
 --      -- 1024x768 65 MHz pixel clock, works
 --      C_resolution_x => 1024,
@@ -1537,16 +1540,16 @@ begin
       --C_bits_y => 11,
 
       -- OLED 96x64
-      C_resolution_x => 96,
-      C_hsync_front_porch => 1,
-      C_hsync_pulse => 1,
-      C_hsync_back_porch => 1,
-      C_resolution_y => 64,
-      C_vsync_front_porch => 1,
-      C_vsync_pulse => 1,
-      C_vsync_back_porch => 1,
-      C_bits_x => 12,
-      C_bits_y => 11    
+--      C_resolution_x => 96,
+--      C_hsync_front_porch => 1,
+--      C_hsync_pulse => 1,
+--      C_hsync_back_porch => 1,
+--      C_resolution_y => 64,
+--      C_vsync_front_porch => 1,
+--      C_vsync_pulse => 1,
+--      C_vsync_back_porch => 1,
+--      C_bits_x => 12,
+--      C_bits_y => 11    
     )
     port map
     (

@@ -210,7 +210,7 @@ package scopeiopkg is
 			num_of_segments  =>    1,
 			division_size    =>   16,
 			grid_width       => 48*10,
-			grid_height      =>  8*10,
+			grid_height      =>  26*10,
 			axis_fontsize    =>    8,
 			textbox_fontwidth   =>  8,
 			hzaxis_height    =>    8,
