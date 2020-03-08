@@ -27,7 +27,7 @@ architecture beh of ulx3s is
 	-- 8:  800x480  @ 60Hz  30MHz 16-pix grid 8-pix font 3 segments
 	-- 9: 1024x600  @ 60Hz  50MHz 16-pix grid 8-pix font 4 segments
 	--10:  800x480  @ 60Hz  40MHz 16-pix grid 8-pix font 3 segments
-        constant vlayout_id: integer := 1;
+        constant vlayout_id: integer := 6;
         -- GUI pointing device type (enable max 1)
         constant C_mouse_ps2    : boolean := false;  -- PS/2 or USB+PS/2 mouse
         constant C_mouse_usb    : boolean := false; -- USB  or USB+PS/2 mouse
@@ -102,7 +102,7 @@ architecture beh of ulx3s is
 	signal vga_clk    : std_logic;
 	signal vga_hsync  : std_logic;
 	signal vga_vsync  : std_logic;
-	signal vga_blank  : std_logic;
+	signal vga_blank, vga_display_enable  : std_logic;
 	signal vga_rgb    : std_logic_vector(0 to 6-1);
 
 	signal vga_hsync_test : std_logic;
@@ -275,7 +275,7 @@ begin
 --        end generate;
 
 	G_vhdl_clk: if true generate
-        clk_vhdl_25_200: entity work.clk_25_200_40_66_6
+        clk_vhdl_25_200: entity work.clk_25_175_40_66_6
         port map
         (
           clki        =>  clk_25MHz,
@@ -1563,33 +1563,56 @@ begin
       vga_blank => vga_blank_test
     );    
 
+    vga_display_enable <= not vga_blank;
+
     G_dvi_vga: if not C_oled_vga generate
-    vga2dvid: entity hdl4fpga.vga2dvid
-    generic map
-    (
-        C_shift_clock_synchronizer => '0',
-        C_ddr => '1',
-        C_depth => 2
-    )
-    port map
-    (
-        clk_pixel => vga_clk,
-        clk_shift => clk_pixel_shift,
-        in_red => vga_rgb(0 to 1),
-        in_green => vga_rgb(2 to 3),
-        in_blue => vga_rgb(4 to 5),
-        in_hsync => vga_hsync,
-        in_vsync => vga_vsync,
-        in_blank => vga_blank,
-        out_clock => dvid_crgb(7 downto 6),
-        out_red => dvid_crgb(5 downto 4),
-        out_green => dvid_crgb(3 downto 2),
-        out_blue => dvid_crgb(1 downto 0)
+--    vga2dvid: entity hdl4fpga.vga2dvid
+--    generic map
+--    (
+--        C_shift_clock_synchronizer => '0',
+--        C_ddr => '1',
+--        C_depth => 2
+--    )
+--    port map
+--   (
+--        clk_pixel => vga_clk,
+--        clk_shift => clk_pixel_shift,
+--        in_red => vga_rgb(0 to 1),
+--        in_green => vga_rgb(2 to 3),
+--        in_blue => vga_rgb(4 to 5),
+--        in_hsync => vga_hsync,
+--        in_vsync => vga_vsync,
+--        in_blank => vga_blank,
+--        out_clock => dvid_crgb(7 downto 6),
+--        out_red => dvid_crgb(5 downto 4),
+--        out_green => dvid_crgb(3 downto 2),
+--        out_blue => dvid_crgb(1 downto 0)
+--    );
+
+      G_LVDS_wrapper: entity hdl4fpga.LVDS_wrapper
+        port map (
+      clk_in => clk_pixel_shift,
+
+      red(7 downto 6)   => vga_rgb(0 to 1),
+      green(7 downto 6) => vga_rgb(2 to 3),
+      blue(7 downto 6)  => vga_rgb(4 to 5),
+
+      dataenable => vga_display_enable,
+      hsync => vga_hsync,
+      vsync => vga_vsync,
+
+      -- single-ended output ready for differential buffers
+      CK1in_p(1 downto 0) => dvid_crgb(7 downto 6),
+      Rxin2_p(1 downto 0) => dvid_crgb(5 downto 4),
+      Rxin1_p(1 downto 0) => dvid_crgb(3 downto 2),
+      Rxin0_p(1 downto 0) => dvid_crgb(1 downto 0)
     );
 
     G_ddr_diff: for i in 0 to 3 generate
-      gpdi_ddr: ODDRX1F port map(D0=>dvid_crgb(2*i), D1=>dvid_crgb(2*i+1), Q=>ddr_d(i), SCLK=>clk_pixel_shift, RST=>'0');
-      gpdi_diff: OLVDS port map(A => ddr_d(i), Z => gpdi_dp(i), ZN => gpdi_dn(i));
+       --gpdi_ddr: ODDRX1F port map(D0=>dvid_crgb(2*i), D1=>dvid_crgb(2*i+1), Q=>ddr_d(i), SCLK=>clk_pixel_shift, RST=>'0');
+       --gpdi_diff: OLVDS port map(A => ddr_d(i), Z => gp(i+3), ZN => gn(i+3));
+      gp(i+3) <= dvid_crgb(2*i);
+      gn(i+3) <= not dvid_crgb(2*i);
     end generate;
     end generate; -- dvi vga (not oled vga)
 
@@ -1626,8 +1649,10 @@ begin
     -- only needed for compile to pass with the same constraints
     -- otherwise this module has no function with oled_vga
     G_x_ddr_diff: for i in 0 to 3 generate
-      x_gpdi_ddr: ODDRX1F port map(D0=>dvid_crgb(2*i), D1=>dvid_crgb(2*i+1), Q=>ddr_d(i), SCLK=>clk_pixel_shift, RST=>'0');
-      x_gpdi_diff: OLVDS port map(A => ddr_d(i), Z => gpdi_dp(i), ZN => gpdi_dn(i));
+      --x_gpdi_ddr: ODDRX1F port map(D0=>dvid_crgb(2*i), D1=>dvid_crgb(2*i+1), Q=>ddr_d(i), SCLK=>clk_pixel_shift, RST=>'0');
+      --x_gpdi_diff: OLVDS port map(A => ddr_d(i), Z => gp(i+3), ZN => gn(i+3));
+      gp(i+3) <= dvid_crgb(2*i);
+      gn(i+3) <= not dvid_crgb(2*i);
     end generate;
     end generate; -- yes oled_vga
 
