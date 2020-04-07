@@ -9,7 +9,9 @@ VHDL_FILES = \
   ../scopeio/usbserial_rxd.vhd \
   ../common/clk_verilog.vhd \
   ../common/clk_25_200_40_66_6.vhd \
+  ../common/clk_25_175_40_25_6.vhd \
   ../common/clk_200_48_24_12_6.vhd \
+  ../common/clk_25_175_40_25_6.vhd \
   ../common/hdl/vga.vhd \
   ../common/hdl/oled/oled_hex_decoder.vhd \
   ../common/hdl/oled/oled_init_pack.vhd \
@@ -120,6 +122,7 @@ VHDL_LIB_FILES = \
   ../../library/video/cga_rom.vhd \
   ../../library/video/vga2dvid.vhd \
   ../../library/video/tmds_encoder.vhd \
+  ../../library/video/LVDS_wrapper.vhd \
   ../../library/video/cga_adapter.vhd \
 
 VERILOG_FILES = \
@@ -127,6 +130,7 @@ VERILOG_FILES = \
   ../../library/usb/usbhost/usbh_crc5.v \
   ../../library/usb/usbhost/usbh_crc16.v \
   ../../library/usb/ulpi_wrapper/ulpi_wrapper.v \
+  ../../library/video/LVDS_Output.v \
 
 #  $(VERILOG_CLOCK_FILE) \
 #  ../common/clk_200_48_24_12_6_v.v \

@@ -37,7 +37,7 @@ entity ulx3s is
 		ftdi_ndtr      : inout std_logic;
 		ftdi_txden     : inout std_logic;
 
-		led            : out   std_logic_vector(8-1 downto 0);
+--		led            : out   std_logic_vector(8-1 downto 0);
 		btn            : in    std_logic_vector(7-1 downto 0);
 		sw             : in    std_logic_vector(4-1 downto 0);
 
@@ -66,9 +66,9 @@ entity ulx3s is
 		adc_miso       : in    std_logic;
 		adc_sclk       : out   std_logic;
 
-		audio_l        : out   std_logic_vector(4-1 downto 0);
-		audio_r        : out   std_logic_vector(4-1 downto 0);
-		audio_v        : out   std_logic_vector(4-1 downto 0);
+--		audio_l        : out   std_logic_vector(4-1 downto 0);
+--		audio_r        : out   std_logic_vector(4-1 downto 0);
+--		audio_v        : out   std_logic_vector(4-1 downto 0);
 
 		wifi_en        : out   std_logic := '1'; -- '0' disables ESP32
 		wifi_rxd       : out   std_logic;
@@ -106,8 +106,24 @@ entity ulx3s is
 		gpdi_sda       : inout std_logic;
 		gpdi_scl       : inout std_logic;
 
-		gp             : inout std_logic_vector(28-1 downto 0);
-		gn             : inout std_logic_vector(28-1 downto 0);
+		gp             : inout std_logic_vector(28-1 downto 14);
+		gn             : inout std_logic_vector(28-1 downto 14);
+		gp3             : out std_logic;
+		gn3             : out std_logic;
+		gp4             : out std_logic;
+		gn4             : out std_logic;
+		gp5             : out std_logic;
+		gn5             : out std_logic;		
+		gp6             : out std_logic;
+		gn6             : out std_logic;
+		gn8             : out std_logic; -- Brightness PWM out 
+		gp9             : in std_logic;
+		gp10             : in std_logic;		
+		gp11             : in std_logic;
+		gp12             : in std_logic;
+
+		--gn             : inout std_logic_vector(28-1 downto 0);
+
 
 		user_programn  : out   std_logic := '1'; -- '0' loads next bitstream from SPI FLASH (e.g. bootloader)
 		shutdown       : out   std_logic := '0' -- '1' power off the board, 10uA sleep

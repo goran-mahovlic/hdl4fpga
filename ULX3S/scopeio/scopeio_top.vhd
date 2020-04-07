@@ -275,13 +275,14 @@ begin
 --        end generate;
 
 	G_vhdl_clk: if true generate
-        clk_vhdl_25_200: entity work.clk_25_175_40_66_6
+        clk_vhdl_25_200: entity work.clk_25_200_40_66_6
         port map
         (
           clki        =>  clk_25MHz,
+        --  clki        =>  gp12,
           clkop       =>  clk_pll(0), -- 200 MHz
           clkos       =>  clk_pll(1), --  40 MHz
-          clkos2      =>  clk_pll(2), --  66.667 MHz
+          clkos2      =>  clk_pll(2), --  66.667 MHz --25MHz
           clkos3      =>  clk_pll(3)  --   6 MHz
         );
         end generate;
@@ -602,8 +603,8 @@ begin
 	    -- to FPGA pin shared with ADC channel which should
 	    -- read something from 12'h000 to 12'hFFF with some
 	    -- conversion noise
-            gn(14) <= S_generator_n when btn(3) = 'Z' else '1';
-            gp(14) <= S_generator_p when btn(3) = 'Z' else '1';
+            gn(14) <= S_generator_n when btn(3) = '1' else 'Z';
+            gp(14) <= S_generator_p when btn(3) = '1' else 'Z';
             gn(15) <= S_generator_n when btn(4) = '1' else 'Z';
             gp(15) <= S_generator_p when btn(4) = '1' else 'Z';
             gn(16) <= S_generator_p when btn(5) = '1' else 'Z';
@@ -1023,7 +1024,7 @@ begin
 	);
 	end generate;
 
-	led <= uart_rxd;
+--	led <= uart_rxd;
 --	led <= mii_rxdata;
 
 	G_not_usb_ethernet_mii: if C_extserial or C_usbserial generate
@@ -1371,7 +1372,7 @@ begin
 	signal mii_txdata_reverse, mii_rxdata_reverse : std_logic_vector(0 to 7);
 	-- RMII pins as labeled on the board and connected to ULX3S with flat cable
 	alias rmii_tx1   : std_logic is gp(9);
-	alias rmii_tx_en : std_logic is gp(10);
+    alias rmii_tx_en : std_logic is gp(10);
 	alias rmii_rx0   : std_logic is gp(11);
 	alias rmii_nint  : std_logic is gp(12);
 	alias rmii_mdio  : std_logic is gp(13);
@@ -1506,7 +1507,7 @@ begin
       -- 800x600 40 MHz pixel clock, works
       C_resolution_x => 480,
       C_hsync_front_porch => 624 - 552,
-      C_hsync_pulse => 64,
+      C_hsync_pulse => 32,
       C_hsync_back_porch => 552 - 504,
       C_resolution_y => 272,
       C_vsync_front_porch => 295 - 276,
@@ -1567,6 +1568,8 @@ begin
     );    
 
     vga_display_enable <= not vga_blank;
+--    dvid_crgb(3) <= gp(10);
+--    dvid_crgb(2) <= gp(10);
 
     G_dvi_vga: if not C_oled_vga generate
 --    vga2dvid: entity hdl4fpga.vga2dvid
@@ -1611,12 +1614,36 @@ begin
       Rxin0_p(1 downto 0) => dvid_crgb(1 downto 0)
     );
 
-    G_ddr_diff: for i in 0 to 3 generate
+ --   G_ddr_diff: for i in 0 to 3 generate
        --gpdi_ddr: ODDRX1F port map(D0=>dvid_crgb(2*i), D1=>dvid_crgb(2*i+1), Q=>ddr_d(i), SCLK=>clk_pixel_shift, RST=>'0');
        --gpdi_diff: OLVDS port map(A => ddr_d(i), Z => gp(i+3), ZN => gn(i+3));
-      gp(i+3) <= dvid_crgb(2*i);
-      gn(i+3) <= not dvid_crgb(2*i);
-    end generate;
+ --     gp(i+3) <= dvid_crgb(2*i);
+ --     gn(i+3) <= not dvid_crgb(2*i);
+ --   end generate;
+
+ --   gpdi_ddr: ODDRX1F port map(D0=>clk_pll(2), Q=>ddr_d(0), SCLK=>clk_pixel_shift, RST=>'0');
+ --   gpdi_diff: OLVDS port map(A => ddr_d(0), Z => gp6, ZN => gn6);
+
+    gp3 <= dvid_crgb(0);
+    gn3 <= not dvid_crgb(0);
+ --   gp3 <= gp9;
+ --   gn3 <= not gp9;
+    gp4 <= dvid_crgb(2);
+    gn4 <= not dvid_crgb(2);
+ --   gp4 <= gp10;
+ --   gn4 <= not gp10;
+    gp5 <= dvid_crgb(4);
+    gn5 <= not dvid_crgb(4);
+--    gp5 <= gp11;
+--    gn5 <= not gp11;
+    gp6 <= dvid_crgb(6);
+    gn6 <= not dvid_crgb(6);
+
+    gn8 <= '1';
+
+--    gp6 <= clk_pll(2);
+--    gn6 <= not clk_pll(2);
+
     end generate; -- dvi vga (not oled vga)
 
     G_oled_vga: if C_oled_vga generate
@@ -1651,12 +1678,21 @@ begin
 
     -- only needed for compile to pass with the same constraints
     -- otherwise this module has no function with oled_vga
-    G_x_ddr_diff: for i in 0 to 3 generate
+  --  G_x_ddr_diff: for i in 0 to 3 generate
       --x_gpdi_ddr: ODDRX1F port map(D0=>dvid_crgb(2*i), D1=>dvid_crgb(2*i+1), Q=>ddr_d(i), SCLK=>clk_pixel_shift, RST=>'0');
       --x_gpdi_diff: OLVDS port map(A => ddr_d(i), Z => gp(i+3), ZN => gn(i+3));
-      gp(i+3) <= dvid_crgb(2*i);
-      gn(i+3) <= not dvid_crgb(2*i);
-    end generate;
+  --    gp(i+3) <= dvid_crgb(2*i);
+  --    gn(i+3) <= not dvid_crgb(2*i);
+  --  end generate;
+    gp3 <= dvid_crgb(0);
+    gn3 <= not dvid_crgb(0);
+    gp4 <= dvid_crgb(2);
+    gn4 <= not dvid_crgb(2);
+    gp5 <= dvid_crgb(4);
+    gn5 <= not dvid_crgb(4);
+    gp6 <= dvid_crgb(6);
+    gn6 <= not dvid_crgb(6);
+
     end generate; -- yes oled_vga
 
 end;
